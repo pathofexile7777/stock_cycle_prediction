@@ -58,4 +58,4 @@ def crawl(code, year):
     plt.show()
 
 
-crawl('071460', '1')
+crawl('025980', '10')
