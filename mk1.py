@@ -1,3 +1,12 @@
+#남북경협 관련주들
+#현대엘리베이터: 017800 / 아난티: 025980 / 제이에스티나: 026040 / 좋은사람들: 033340
+#신원: 009270 / 재영솔루텍: 049630 / 남광토건: 001260 / 현대건설: 000720
+#삼부토건: 001470 / 경농: 002100 / 조비: 001550 / 롯데정밀화학: 004000 / 남해화학: 025860
+#녹십자: 006280 / 한국전력: 015760 / 인디에프: 014990 / 인지컨트롤스: 023800
+#자화전자: 033240 / 남화토건: 091590 / 한국석유: 004090 / 다스코: 058730
+#스페코: 013810 / 일신석재: 007110 / 지엔씨에너지: 119850 / 희림: 037440
+#이엑스티: 226360 / 도화엔지니어링: 002150 / 양지사: 030960 / 한창: 005110
+
 from bs4 import BeautifulSoup
 import urllib.request as req
 import requests
@@ -24,6 +33,7 @@ def crawl(code, year):
     lowest_list = []                                # 저가 list
     Modified_list = []                              # 수정종가 list
     quantity_list = []                              # 거래량 list
+    daegeum_list = []                               # 거래대금 list
 
     for i in range(len(stockData)):
         int = str(stockData[i])[12:-9]
@@ -34,17 +44,20 @@ def crawl(code, year):
         lowest_price = float(int_split[3])          # 저가
         ModCP = float(int_split[4])                 # 수정종가
         quantity = float(int_split[5])              # 거래량
+        daegeum = ModCP * quantity                  # 거래대금
         date_list.append(date)
         started_list.append(starting_price)
         highest_list.append(highest_price)
         lowest_list.append(lowest_price)
         Modified_list.append(ModCP)
         quantity_list.append(quantity)
+        daegeum_list.append(daegeum)
     data_dict['시가'] = started_list
     data_dict['고가'] = highest_list
     data_dict['저가'] = lowest_list
     data_dict['수정종가'] = Modified_list
     data_dict['거래량'] = quantity_list
+    data_dict['거래대금'] = daegeum_list
 
     df = pandas.DataFrame(data_dict, index=date_list)
     print(df)
@@ -58,4 +71,4 @@ def crawl(code, year):
     plt.show()
 
 
-crawl('025980', '10')
+crawl('025980', '3')
