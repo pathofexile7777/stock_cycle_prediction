@@ -13,13 +13,23 @@ import matplotlib.pyplot as plt
 
 
 def cal(code):
-    gs = web.DataReader(code, "yahoo", "2017-01-01", "2019-12-31")
-    new_gs = gs[gs['Volume'] != 0]  # 거래량이 0인 날짜 제외
+    gs = web.DataReader(code, "yahoo", start, end)
+    new_gs = gs[gs['Volume'] != 0]      # 거래량이 0인 날짜 제외
 
+    # 거래대금 행 추가
+    new_gs['Transaction price'] = new_gs['Close'] * new_gs['Volume']
+
+    # 종가 기준 이동평균선
     ma5 = new_gs['Adj Close'].rolling(window=5).mean()
     ma20 = new_gs['Adj Close'].rolling(window=20).mean()
     ma60 = new_gs['Adj Close'].rolling(window=60).mean()
     ma120 = new_gs['Adj Close'].rolling(window=120).mean()
+
+    # 거래대금 기준 이동평균선
+    ma5 = new_gs['Transaction price'].rolling(window=5).mean()
+    ma20 = new_gs['Transaction price'].rolling(window=20).mean()
+    ma60 = new_gs['Transaction price'].rolling(window=60).mean()
+    ma120 = new_gs['Transaction price'].rolling(window=120).mean()
 
     # 각 주가이동평균 값들을 새로운 컬럼으로 추가
     new_gs.insert(len(new_gs.columns), "MA5", ma5)
@@ -27,10 +37,12 @@ def cal(code):
     new_gs.insert(len(new_gs.columns), "MA60", ma60)
     new_gs.insert(len(new_gs.columns), "MA120", ma120)
 
-    plt.plot(new_gs.index, new_gs['Adj Close'], label="Adj Close")
-    #plt.plot(new_gs.index, new_gs['MA5'], label="MA5")
+    plt.plot(new_gs.index, new_gs['Transaction price'],
+             label="Transaction price")
+    # plt.plot(new_gs.index, new_gs['Adj Close'], label="Adj Close")
+    # plt.plot(new_gs.index, new_gs['MA5'], label="MA5")
     plt.plot(new_gs.index, new_gs['MA20'], label="MA20")
-    #plt.plot(new_gs.index, new_gs['MA60'], label="MA60")
+    # plt.plot(new_gs.index, new_gs['MA60'], label="MA60")
     plt.plot(new_gs.index, new_gs['MA120'], label="MA120")
 
     plt.legend(loc='best')
@@ -67,7 +79,7 @@ def cal(code):
 # 자화전자
 # cal("033240.KS")
 # 한국석유
-# cal("004090.KS")
+cal("004090.KS")
 # 다스코
 # cal("058730.KS")
 # 일신석재
@@ -75,4 +87,4 @@ def cal(code):
 # 도화엔지니어링
 # cal("002150.KS")
 # 한창
-cal("005110.KS")
+# cal("005110.KS")
