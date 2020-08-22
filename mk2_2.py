@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 start = datetime.datetime(2019, 12, 20)
 end = datetime.datetime(2019, 12, 31)
 
-#close = []
-#theme = []
+close = []
+theme = []
 
 # 남북경협 테마주 코드
 code = ["017800.KS", "023800.KS", "009270.KS", "001260.KS", "000720.KS", "001470.KS",
@@ -25,16 +25,34 @@ code = ["017800.KS", "023800.KS", "009270.KS", "001260.KS", "000720.KS", "001470
         "014990.KS", "033240.KS", "004090.KS", "058730.KS", "007110.KS", "002150.KS", "005110.KS"]
 
 
+def f(x):
+    frame = web.DataReader(x, "yahoo", start, end)
+    new_frame = frame[frame['Volume'] != 0]
+    new_frame['Transaction price'] = new_frame['Close'] * new_frame['Volume']
+    return new_frame
+
+
+k = list(map(f, code))
+
+for i in k:
+    close.append(i['Transaction price'])
+
+print(sum(close))
+
+#k = list(map(lambda x:web.DataReader(x, "yahoo", start, end), code))
+
+print(k)
+"""
 # 데이터 수집 함수
 for i in code:
-    gs = web.DataReader(code, "yahoo", start, end)
+    gs = web.DataReader(i, "yahoo", start, end)
     new_gs = gs[gs['Volume'] != 0]      # 거래량이 0인 날짜 제외
 
     # 거래대금 행 추가
     new_gs['Transaction price'] = new_gs['Close'] * new_gs['Volume']
 
-    #close += new_gs['Close']
-    new_gs['theme'] += new_gs['Transaction price']
+    close += new_gs['Close']
+    theme += new_gs['Transaction price']
 
 # 테마의 종합 종가 기준 이동평균선
 # ma5 = close['Close'].rolling(window=5).mean()
@@ -43,10 +61,10 @@ for i in code:
 # ma120 = close['Close'].rolling(window=120).mean()
 
 # 테마의 거래대금 기준 이동평균선
-ma5 = new_gs['theme'].rolling(window=5).mean()
-ma20 = new_gs['theme'].rolling(window=20).mean()
-ma60 = new_gs['theme'].rolling(window=60).mean()
-ma120 = new_gs['theme'].rolling(window=120).mean()
+ma5 = theme['Transaction price'].rolling(window=5).mean()
+ma20 = theme['Transaction price'].rolling(window=20).mean()
+ma60 = theme['Transaction price'].rolling(window=60).mean()
+ma120 = theme['Transaction price'].rolling(window=120).mean()
 
 # 종합 종가에 각 이동평균선 컬럼 추가
 # close.insert(len(close.columns), "MA5", ma5)
@@ -55,19 +73,19 @@ ma120 = new_gs['theme'].rolling(window=120).mean()
 # close.insert(len(close.columns), "MA120", ma120)
 
 # 종합 거래대금에 각 이동평균선 컬럼 추가
-new_gs.insert(len(new_gs.columns), "MA5", ma5)
-new_gs.insert(len(new_gs.columns), "MA20", ma20)
-new_gs.insert(len(new_gs.columns), "MA60", ma60)
-new_gs.insert(len(new_gs.columns), "MA120", ma120)
+theme.insert(len(theme.columns), "MA5", ma5)
+theme.insert(len(theme.columns), "MA20", ma20)
+theme.insert(len(theme.columns), "MA60", ma60)
+theme.insert(len(theme.columns), "MA120", ma120)
 
 
-plt.plot(new_gs.index, new_gs['theme'],
-         label="theme")
-plt.plot(new_gs.index, new_gs['theme'], label="theme")
-plt.plot(new_gs.index, new_gs['MA5'], label="MA5")
+plt.plot(theme.index, theme['Transaction price'],
+         label="Transaction price")
+plt.plot(theme.index, theme['Transaction price'], label="Transaction price")
+plt.plot(theme.index, theme['MA5'], label="MA5")
 #plt.plot(theme.index, theme['MA20'], label="MA20")
 #plt.plot(theme.index, theme['MA60'], label="MA60")
-plt.plot(new_gs.index, new_gs['MA120'], label="MA120")
+plt.plot(theme.index, theme['MA120'], label="MA120")
 
 plt.legend(loc='best')
 plt.grid()
@@ -124,3 +142,4 @@ plt.show()
 # cal("002150.KS")
 # 한창
 # cal("005110.KS")
+"""
