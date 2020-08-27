@@ -7,6 +7,7 @@
 # 스페코: 013810 / 일신석재: 007110 / 지엔씨에너지: 119850 / 희림: 037440
 # 이엑스티: 226360 / 도화엔지니어링: 002150 / 양지사: 030960 / 한창: 005110
 
+import pandas
 from pandas import Series, DataFrame
 import pandas_datareader.data as web
 import datetime
@@ -18,6 +19,7 @@ end = datetime.datetime(2019, 12, 31)
 
 close_list = []          # 종가 종합 리스트
 trans_list = []          # 거래대금 종합 리스트
+norm_list = []           # normalized close 리스트
 
 # 남북경협 테마주 코드
 code = ["017800.KS", "023800.KS", "009270.KS", "001260.KS", "000720.KS", "001470.KS",
@@ -30,6 +32,8 @@ def f(x):
     frame = web.DataReader(x, "yahoo", start, end)
     new_frame = frame[frame['Volume'] != 0]
     new_frame['Transaction price'] = new_frame['Close'] * new_frame['Volume']
+    new_frame['Norm_close'] = (new_frame['Close'] - new_frame['Close'].min()) / \
+        (new_frame['Close'].max() - new_frame['Close'].min())
     return new_frame
 
 
@@ -40,37 +44,51 @@ k = list(map(f, code))
 for i in k:
     close_list.append(i['Close'])
     trans_list.append(i['Transaction price'])
-
+    norm_list.append(i['Norm_close'])
 
 # 테마 별 종가, 거래대금 종합 리스트
 close_sum = sum(close_list)
 trans_sum = sum(trans_list)
+norm_sum = sum(norm_list)
 
 # 종가 리스트의 이동평균선
-close_ma5 = close_sum.rolling(window=5).mean()
-close_ma20 = close_sum.rolling(window=20).mean()
-close_ma60 = close_sum.rolling(window=60).mean()
-close_ma120 = close_sum.rolling(window=120).mean()
+# close_ma5 = close_sum.rolling(window=5).mean()
+# close_ma20 = close_sum.rolling(window=20).mean()
+# close_ma60 = close_sum.rolling(window=60).mean()
+# close_ma120 = close_sum.rolling(window=120).mean()
 
 # 거래대금 리스트의 이동평균선
-trans_ma5 = trans_sum.rolling(window=5).mean()
-trans_ma20 = trans_sum.rolling(window=5).mean()
-trans_ma60 = trans_sum.rolling(window=5).mean()
-trans_ma120 = trans_sum.rolling(window=5).mean()
+# trans_ma5 = trans_sum.rolling(window=5).mean()
+# trans_ma20 = trans_sum.rolling(window=20).mean()
+# trans_ma60 = trans_sum.rolling(window=60).mean()
+# trans_ma120 = trans_sum.rolling(window=120).mean()
+
+# 정규화된 종가 리스트의 이동평균선
+norm_ma5 = norm_sum.rolling(window=5).mean()
+norm_ma20 = norm_sum.rolling(window=20).mean()
+norm_ma60 = norm_sum.rolling(window=60).mean()
+norm_ma120 = norm_sum.rolling(window=120).mean()
 
 # 종가 리스트의 그래프 생성
-#plt.plot(close_sum.index, close_sum, label="close list")
+# plt.plot(close_sum.index, close_sum, label="close list")
 # plt.plot(close_sum.index, close_ma5, label="close_ma5")
 # plt.plot(close_sum.index, close_ma20, label="close_ma20")
-#plt.plot(close_sum.index, close_ma60, label="close_ma60")
+# plt.plot(close_sum.index, close_ma60, label="close_ma60")
 # plt.plot(close_sum.index, close_ma120, label="close_ma120")
 
 # 거래대금 리스트의 그래프 생성
 # plt.plot(trans_sum.index, trans_sum, label="trans list")
-# plt.plot(trans_sum.index, trans_ma5, label="trans_ma5")
+#plt.plot(trans_sum.index, trans_ma5, label="trans_ma5")
 # plt.plot(trans_sum.index, trans_ma20, label="trans_ma20")
-plt.plot(trans_sum.index, trans_ma60, label="trans_ma60")
+# plt.plot(trans_sum.index, trans_ma60, label="trans_ma60")
 # plt.plot(trans_sum.index, trans_ma120, label="trans_ma120")
+
+# 종가 리스트의 그래프 생성
+# plt.plot(norm_sum.index, norm_sum, label="norm list")
+plt.plot(norm_sum.index, norm_ma5, label="norm_ma5")
+# plt.plot(norm_sum.index, norm_ma20, label="norm_ma20")
+# plt.plot(norm_sum.index, norm_ma60, label="norm_ma60")
+# plt.plot(norm_sum.index, norm_ma120, label="norm_ma120")
 
 plt.legend(loc='best')
 plt.grid()
@@ -81,7 +99,7 @@ plt.show()
 """print(k)"""
 
 
-#k = list(map(lambda x:web.DataReader(x, "yahoo", start, end), code))
+# k = list(map(lambda x:web.DataReader(x, "yahoo", start, end), code))
 
 
 """
@@ -124,8 +142,8 @@ theme.insert(len(theme.columns), "MA120", ma120)
 
 plt.plot(theme.index, theme['Transaction price'], label="Transaction price")
 plt.plot(theme.index, theme['MA5'], label="MA5")
-#plt.plot(theme.index, theme['MA20'], label="MA20")
-#plt.plot(theme.index, theme['MA60'], label="MA60")
+# plt.plot(theme.index, theme['MA20'], label="MA20")
+# plt.plot(theme.index, theme['MA60'], label="MA60")
 plt.plot(theme.index, theme['MA120'], label="MA120")
 
 plt.legend(loc='best')
