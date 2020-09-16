@@ -97,7 +97,7 @@ deriv_sum = sum(deriv_list)
 
 # 정규화된 종가 리스트의 이동평균선
 # norm_ma5 = norm_sum.rolling(window=5).mean()
-# norm_ma10 = norm_sum.rolling(window=10).mean()
+norm_ma10 = norm_sum.rolling(window=10).mean()
 # norm_ma20 = norm_sum.rolling(window=20).mean()
 # norm_ma60 = norm_sum.rolling(window=60).mean()
 # norm_ma120 = norm_sum.rolling(window=120).mean()
@@ -113,8 +113,6 @@ deriv_ma10 = deriv_sum.rolling(window=10).mean()
 # plt.plot(close_sum.index, close_sum, label="close list")
 # plt.plot(close_sum.index, close_ma5, label="close_ma5")
 # plt.plot(close_sum.index, close_ma10, label="close_ma10")
-
-
 # plt.plot(close_sum.index, close_ma20, label="close_ma20")
 # plt.plot(close_sum.index, close_ma60, label="close_ma60")
 # plt.plot(close_sum.index, close_ma120, label="close_ma120")
@@ -130,7 +128,7 @@ deriv_ma10 = deriv_sum.rolling(window=10).mean()
 # 정규화된 종가 리스트의 그래프 생성
 # plt.plot(norm_sum.index, norm_sum, label="norm list")
 # plt.plot(norm_sum.index, norm_ma5, label="norm_ma5")
-# plt.plot(norm_sum.index, norm_ma10, label="norm_ma10")
+plt.plot(norm_sum.index, norm_ma10, label="norm_ma10")
 # plt.plot(norm_sum.index, norm_ma20, label="norm_ma20")
 # plt.plot(norm_sum.index, norm_ma60, label="norm_ma60")
 # plt.plot(norm_sum.index, norm_ma120, label="norm_ma120")
@@ -138,17 +136,24 @@ deriv_ma10 = deriv_sum.rolling(window=10).mean()
 # 미분 리스트의 그래프 생성
 # plt.plot(deriv_sum.index, deriv_sum, label="deriv list")
 # plt.plot(deriv_sum.index, deriv_ma5, label="deriv_ma5")
-plt.plot(deriv_sum.index, deriv_ma10, label="deriv_ma10")
+# plt.plot(deriv_sum.index, deriv_ma10, label="deriv_ma10")
 
+# red_norm_list = [null for i in range(deriv_ma10.index)]
 red_norm_list = []
+red_close_list = []
 
 for i in deriv_ma10.index:
-    if(deriv_ma10[i] < -0.3 or deriv_ma10[i] > 0.3):
+    if(deriv_ma10[i] < -0.2):
         red_norm_list.append(deriv_ma10[i])
+        red_close_list.append(norm_ma10[i])
+    else:
+        red_norm_list.append(None)
+        red_close_list.append(None)
         # plt.plot(norm_sum.index, norm_ma10, color='red')
 
 
-plt.plot(red_norm_list.index, red_norm_list, color='red')
+# plt.plot(deriv_sum.index, red_norm_list, color='red')
+plt.plot(norm_sum.index, red_close_list, color='red')
 
 
 # plt.plot(deriv_sum.index, deriv_ma20, label="deriv_ma20")
