@@ -1,6 +1,7 @@
 import pandas
 import openpyxl
 import os
+import pandas as pd
 from pandas import Series, DataFrame, ExcelWriter
 import pandas_datareader.data as web
 import datetime
@@ -9,7 +10,7 @@ import numpy as np
 
 # 시작 종료 날짜 설정
 start = datetime.datetime(2017, 1, 1)
-end = datetime.datetime(2019, 12, 31)
+end = datetime.datetime(2020, 2, 1)
 
 close_list = []          # 종가 종합 리스트
 trans_list = []          # 거래대금 종합 리스트
@@ -22,30 +23,56 @@ code = ["017800.KS", "023800.KS", "009270.KS", "001260.KS", "000720.KS",
         "001470.KS", "002100.KS", "001550.KS", "004000.KS", "025860.KS",
         "006280.KS", "015760.KS", "014990.KS", "033240.KS", "004090.KS",
         "058730.KS", "007110.KS", "002150.KS", "005110.KS", "070960.KS", ]
-# "045390.KS", ]
+
+# COVID-19 관련주(올해 2월부터): KeyError
+# code = ["065950.KQ", "131370.KQ", "017890.KQ", "133750.KQ", "289010.KQ",
+#         "096530.KQ", "011150.KS", "045060.KQ", "084650.KQ", ]
+
+# 정치인 테마주: 안철수(2012년 1월부터): KeyError
+# code = ["004770.KS", "053800.KQ", "093640.KQ", "049080.KQ"]
+
+# 정치인 테마주: 이재명
+# code = ["045660.KQ", "224110.KQ", "025950.KQ",
+#         "208140.KQ", "053160.KQ", "045340.KQ", ]
+
+# 수소차 테마주
+# code = ["018880.KS", "081000.KS", "023900.KQ",
+#         "012340.KQ", "095190.KQ", "023800.KS", ]
+
+# 5G 테마주: KeyError
+# code = ["032500.KQ", "037460.KQ", "138080.KQ",
+#         "056360.KQ", "010170.KQ", "100590.KQ", ]
 
 # w = ExcelWriter('e.xlsx')
 
 
 # 데이터 크롤링 함수
 def f(x):
-    frame = web.DataReader(x, "yahoo", start, end)
-    new_frame = frame[frame['Volume'] != 0]
-    # 거래대금 행 추가
-    new_frame['Transaction price'] = new_frame['Close'] * new_frame['Volume']
-    # 정규화된 종가 행 추가
-    new_frame['Norm_close'] = (new_frame['Close'] - new_frame['Close'].min()) / \
-        (new_frame['Close'].max() - new_frame['Close'].min())
-    # 정규화된 종가, 거래대금의 미분값 행 추가
-    diff_frame = new_frame['Transaction price']
-    new_frame['Trans deriv'] = -diff_frame.diff(periods=-1)
-    new_frame['Norm deriv'] = -new_frame['Norm_close'].diff(periods=-5)
-    # diff(periods=-1): 바로 다음 row값과의 차이
-    # diff(periods=-5): 5일단위로 뺄셈
-    # 엑셀파일로 저장
-    # new_frame.to_excel(w, sheet_name="output" + str(x))
-    # w.save()
-    return new_frame
+    try:
+        frame = web.DataReader(x, "yahoo", start, end)
+        # https://emilkwak.github.io/pandas-dataframe-settingwithcopywarning
+        # SettingWithCopyWarning 경고가 자꾸 떴던 이유에 대한 링크
+        # 아래 코드에 .copy()를 붙여줌으로써 해결됐다.
+        new_frame = frame[frame['Volume'] != 0].copy()
+        # 거래대금 행 추가
+        new_frame['Transaction price'] = new_frame.loc[:, ('Close')] * \
+            new_frame.loc[:, ('Volume')]
+        # 정규화된 종가 행 추가
+        new_frame['Norm_close'] = (new_frame.loc[:, ('Close')] - new_frame.loc[:, ('Close')].min()) / \
+            (new_frame.loc[:, ('Close')].max() -
+             new_frame.loc[:, ('Close')].min())
+        # 정규화된 종가, 거래대금의 미분값 행 추가
+        diff_frame = new_frame['Transaction price']
+        new_frame['Trans deriv'] = -diff_frame.diff(periods=-1)
+        new_frame['Norm deriv'] = -new_frame['Norm_close'].diff(periods=-5)
+        # diff(periods=-1): 바로 다음 row값과의 차이
+        # diff(periods=-5): 5일단위로 뺄셈
+        # 엑셀파일로 저장
+        # new_frame.to_excel(w, sheet_name="output" + str(x))
+        # w.save()
+        return new_frame
+    except KeyError:
+        pass
 
 
 # 종목 별 크롤링 실행
@@ -132,43 +159,6 @@ plt.plot(norm_sum.index, norm_ma15, label="norm_ma15")
 # plt.plot(norm_deriv_sum.index, norm_deriv_sum, label="norm_deriv list")
 # plt.plot(norm_deriv_sum.index, norm_deriv_ma5, label="norm_deriv_ma5")
 # plt.plot(norm_deriv_sum.index, norm_deriv_ma10, label="norm_deriv_ma10")
-
-
-####################################### 10일선 #######################################
-# red_close_list = []
-# count = 0
-
-# for i in norm_deriv_ma10.index:
-#     if(norm_deriv_ma10[i] > 0.1):
-#         red_close_list.append(norm_ma10[i])
-#         count += 1
-#     elif(count >= 5 and norm_deriv_ma10[i] < 0.1 and norm_deriv_ma10[i] > -0.1):
-#         red_close_list.append(norm_ma10[i])
-#     else:
-#         red_close_list.append(None)
-#         count = 0
-
-# plt.plot(norm_sum.index, red_close_list, color='red')
-######################################################################################
-
-####################################### 15일선 #######################################
-red_close_list = []
-count = 0
-
-for i in norm_deriv_ma15.index:
-    if(norm_deriv_ma15[i] > 0.1):
-        red_close_list.append(norm_ma15[i])
-        count += 1
-    elif(count >= 10 and norm_deriv_ma15[i] < 0.1 and norm_deriv_ma15[i] > -0.01):
-        red_close_list.append(norm_ma15[i])
-    else:
-        red_close_list.append(None)
-        count = 0
-
-plt.plot(norm_sum.index, red_close_list, color='red')
-######################################################################################
-
-
 # plt.plot(norm_deriv_sum.index, norm_deriv_ma20, label="norm_deriv_ma20")
 # plt.plot(norm_deriv_sum.index, norm_deriv_ma60, label="norm_deriv_ma60")
 # plt.plot(norm_deriv_sum.index, norm_deriv_ma120, label="norm_deriv_ma120")
@@ -181,12 +171,29 @@ plt.plot(norm_sum.index, red_close_list, color='red')
 # plt.plot(trans_deriv_sum.index, trans_deriv_ma60, label="trans_deriv_ma60")
 # plt.plot(trans_deriv_sum.index, trans_deriv_ma120, label="trans_deriv_ma120")
 
+####################################### 15일선 #######################################
+red_close_list = []
+count = 0
+# pd.date_range('2017-01-01', )
+
+for i in norm_deriv_ma15.index:
+    if(norm_deriv_ma15[i] >= 0.06):
+        red_close_list.append(norm_ma15[i])
+        count += 1
+    elif(count >= 20 and norm_deriv_ma15[i] < 0.06 and norm_deriv_ma15[i] > -0.4):
+        red_close_list.append(norm_ma15[i])
+    # elif(count >= 10 and norm_deriv_ma15[i] - norm_deriv_ma15[i - 10] < 0):
+    #     red_close_list.append(norm_ma15[i])
+    else:
+        red_close_list.append(None)
+        count = 0
+
+plt.plot(norm_sum.index, red_close_list, color='red')
+######################################################################################
+
 plt.legend(loc='best')
 plt.grid()
 plt.show()
-
-
-"""print(k)"""
 
 
 """
@@ -196,7 +203,7 @@ plt.show()
 # 남광토건:             001260.KS
 # 현대건설:             000720.KS
 # 삼부토건:             001470.KS
-# 경농:                 002100.KS
+# 경농:                 002100.KS`
 # 조비:                 001550.KS
 # 롯데정밀화학:         004000.KS
 # 남해화학:             025860.KS
