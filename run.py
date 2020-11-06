@@ -173,7 +173,7 @@ plt.plot(norm_sum.index, norm_ma20, label="norm_ma20")
 # plt.plot(trans_deriv_sum.index, trans_deriv_ma120, label="trans_deriv_ma120")
 
 ####################################### 15일선 #######################################
-red_close_list = []
+red_close_list = pd.DataFrame(index=range(0, 2), columns=['Date', 'value'])
 count = 0
 _begin = 0
 _end = 0
@@ -186,7 +186,8 @@ for i in norm_deriv_ma20.index:
             beginDate = i
         else:
             endDate = i
-        red_close_list.append(norm_ma20[i])
+        red_close_list.append(norm_ma20)
+        # red_close_list.loc[i] = norm_ma20[i]
         count += 1
         _end = norm_deriv_ma20[i]
     elif(_end - _begin >= 2 and count >= 10 and norm_deriv_ma20[i] < 0.04 and norm_deriv_ma20[i] > -0.3):
@@ -196,17 +197,16 @@ for i in norm_deriv_ma20.index:
         count = 0
         _begin = 0
         _end = 0
-        # for j in range(beginDate, endDate):
-        #     del red_close_list[i]
-        while 1:
-            if beginDate == endDate:
-                break
-            del red_close_list[beginDate]
-            if red_close_list[beginDate + timedelta.Timedelta(days=1)] == None:
-                while red_close_list[beginDate] != None:
-                    beginDate = beginDate + timedelta.Timedelta(days=1)
-            else:
-                beginDate = beginDate + timedelta.Timedelta(days=1)
+        # while 1:
+        #     if beginDate == endDate:
+        #         break
+        #     del red_close_list[beginDate]
+        #     if red_close_list[beginDate + timedelta.Timedelta(days=1)] == None:
+        #         while red_close_list[beginDate] != None:
+        #             beginDate = beginDate + timedelta.Timedelta(days=1)
+        #     else:
+        #         beginDate = beginDate + timedelta.Timedelta(days=1)
+        red_close_list[red_close_list.columns.difference([beginDate, endDate])]
 
 plt.plot(norm_sum.index, red_close_list, color='red')
 ######################################################################################
