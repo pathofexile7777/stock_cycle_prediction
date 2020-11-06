@@ -5,6 +5,7 @@ import pandas as pd
 from pandas import Series, DataFrame, ExcelWriter
 import pandas_datareader.data as web
 import datetime
+import timedelta
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -64,7 +65,7 @@ def f(x):
         # 정규화된 종가, 거래대금의 미분값 행 추가
         diff_frame = new_frame['Transaction price']
         new_frame['Trans deriv'] = -diff_frame.diff(periods=-1)
-        new_frame['Norm deriv'] = -new_frame['Norm_close'].diff(periods=-5)
+        new_frame['Norm deriv'] = -new_frame['Norm_close'].diff(periods=-10)
         # diff(periods=-1): 바로 다음 row값과의 차이
         # diff(periods=-5): 5일단위로 뺄셈
         # 엑셀파일로 저장
@@ -110,16 +111,16 @@ norm_deriv_sum = sum(norm_deriv_list)
 # 정규화된 종가 리스트의 이동평균선
 # norm_ma5 = norm_sum.rolling(window=5).mean()
 # norm_ma10 = norm_sum.rolling(window=10).mean()
-norm_ma15 = norm_sum.rolling(window=15).mean()
-# norm_ma20 = norm_sum.rolling(window=20).mean()
+# norm_ma15 = norm_sum.rolling(window=15).mean()
+norm_ma20 = norm_sum.rolling(window=20).mean()
 # norm_ma60 = norm_sum.rolling(window=60).mean()
 # norm_ma120 = norm_sum.rolling(window=120).mean()
 
 # 정규화 종가 미분 리스트의 이동평균선
 # norm_deriv_ma5 = norm_deriv_sum.rolling(window=5).mean()
 # norm_deriv_ma10 = norm_deriv_sum.rolling(window=10).mean()
-norm_deriv_ma15 = norm_deriv_sum.rolling(window=15).mean()
-# norm_deriv_ma20 = norm_deriv_sum.rolling(window=20).mean()
+# norm_deriv_ma15 = norm_deriv_sum.rolling(window=15).mean()
+norm_deriv_ma20 = norm_deriv_sum.rolling(window=20).mean()
 # norm_deriv_ma60 = norm_deriv_sum.rolling(window=60).mean()
 # norm_deriv_ma120 = norm_deriv_sum.rolling(window=120).mean()
 
@@ -150,8 +151,8 @@ norm_deriv_ma15 = norm_deriv_sum.rolling(window=15).mean()
 # plt.plot(norm_sum.index, norm_sum, label="norm list")
 # plt.plot(norm_sum.index, norm_ma5, label="norm_ma5")
 # plt.plot(norm_sum.index, norm_ma10, label="norm_ma10")
-plt.plot(norm_sum.index, norm_ma15, label="norm_ma15")
-# plt.plot(norm_sum.index, norm_ma20, label="norm_ma20")
+# plt.plot(norm_sum.index, norm_ma15, label="norm_ma15")
+plt.plot(norm_sum.index, norm_ma20, label="norm_ma20")
 # plt.plot(norm_sum.index, norm_ma60, label="norm_ma60")
 # plt.plot(norm_sum.index, norm_ma120, label="norm_ma120")
 
@@ -174,19 +175,38 @@ plt.plot(norm_sum.index, norm_ma15, label="norm_ma15")
 ####################################### 15일선 #######################################
 red_close_list = []
 count = 0
-# pd.date_range('2017-01-01', )
+_begin = 0
+_end = 0
+beginDate = 0
+endDate = 0
 
-for i in norm_deriv_ma15.index:
-    if(norm_deriv_ma15[i] >= 0.06):
-        red_close_list.append(norm_ma15[i])
+for i in norm_deriv_ma20.index:
+    if(norm_deriv_ma20[i] >= 0.04):
+        if count == 0:
+            beginDate = i
+        else:
+            endDate = i
+        red_close_list.append(norm_ma20[i])
         count += 1
-    elif(count >= 20 and norm_deriv_ma15[i] < 0.06 and norm_deriv_ma15[i] > -0.4):
-        red_close_list.append(norm_ma15[i])
-    # elif(count >= 10 and norm_deriv_ma15[i] - norm_deriv_ma15[i - 10] < 0):
-    #     red_close_list.append(norm_ma15[i])
+        _end = norm_deriv_ma20[i]
+    elif(_end - _begin >= 2 and count >= 10 and norm_deriv_ma20[i] < 0.04 and norm_deriv_ma20[i] > -0.3):
+        red_close_list.append(norm_ma20[i])
     else:
         red_close_list.append(None)
         count = 0
+        _begin = 0
+        _end = 0
+        # for j in range(beginDate, endDate):
+        #     del red_close_list[i]
+        while 1:
+            if beginDate == endDate:
+                break
+            del red_close_list[beginDate]
+            if red_close_list[beginDate + timedelta.Timedelta(days=1)] == None:
+                while red_close_list[beginDate] != None:
+                    beginDate = beginDate + timedelta.Timedelta(days=1)
+            else:
+                beginDate = beginDate + timedelta.Timedelta(days=1)
 
 plt.plot(norm_sum.index, red_close_list, color='red')
 ######################################################################################
